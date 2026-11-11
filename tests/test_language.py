@@ -132,3 +132,27 @@ def test_sessions_are_separate(ctx):
 def test_hooks_never_raise_on_junk(ctx):
     assert ctx.fire("pre_llm_call", user_message=None) == [None]
     assert ctx.fire("post_llm_call", assistant_response=None) == [None]
+
+
+def test_long_hostile_text_is_fast():
+    import time
+    for junk in ("a@" * 50000, "x" * 200000, "a.b/" * 60000 + "c", "`" + "y" * 100000):
+        started = time.perf_counter()
+        D.detect(junk)
+        assert time.perf_counter() - started < 0.5
+
+
+def test_only_the_start_of_long_text_is_read():
+    text = "Please look at the logs and tell me why the upload is failing. " * 80 + "上传失败" * 5000
+    assert D.detect(text) == "en"
+
+
+def test_detection_happens_outside_the_lock(ctx, monkeypatch):
+    seen = []
+    real = D.detect
+    def spy(text, *a, **k):
+        seen.append(language_lock._LOCK.locked())
+        return real(text, *a, **k)
+    monkeypatch.setattr(D, "detect", spy)
+    turn(ctx, EN_USER, EN_REPLY)
+    assert seen and not any(seen)

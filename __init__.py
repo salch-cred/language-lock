@@ -107,9 +107,9 @@ def on_pre_llm_call(session_id: str = "", user_message: Any = None, **_: Any) ->
     text = _text(user_message).strip()
     if text.startswith("/"):
         return None
+    lang = D.detect(text)                  # outside the lock, so other sessions never wait on it
     with _LOCK:
         s = _session(session_id or "")
-        lang = D.detect(text)
         if lang:
             s.heard.append(lang)
         s.on_purpose = bool(_ON_PURPOSE.search(text))

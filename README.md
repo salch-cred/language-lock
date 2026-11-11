@@ -57,6 +57,7 @@ plugins:
 
 - **The fix comes on the next turn.** A reply that already drifted is not rewritten. Rewriting would need a model call and would hold back streaming.
 - **20 languages.** Others are ignored, never mistaken for drift.
+- **Long text:** only the first 4,000 characters of a message or reply are read, which is plenty to tell the language and keeps pasted logs from slowing anything down.
 - **Very short messages** ("ok", "👍") don't count toward your language.
 - **Compaction summaries** ([#135470](https://github.com/NousResearch/hermes-agent/issues/135470)) are written by Hermes's auxiliary model, which plugins can watch but not steer. That one needs a core fix.
 
@@ -66,7 +67,7 @@ plugins:
 pytest tests
 ```
 
-23 tests cover detecting 11 languages, ignoring code and links, drift and correction, intentional translation, a user switching languages, the settings and the commands.
+26 tests cover long and hostile input staying fast, detecting 11 languages, ignoring code and links, drift and correction, intentional translation, a user switching languages, the settings and the commands.
 
 ## License
 

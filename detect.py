@@ -43,12 +43,18 @@ WORDS = {
 }
 _WORD_SETS = {lang: set(words) for lang, words in WORDS.items()}
 
-_CODE = re.compile(r"```.*?```|`[^`\n]*`|https?://\S+|\S+@\S+\.\S+|[\w./\\-]+\.(?:py|js|ts|md|json|yaml|yml|txt|html|css)\b", re.S)
+# Every alternative is bounded, so a long pasted token or log line can't make the pattern backtrack
+# for long (Python's re holds the interpreter lock while it runs, which would stall the gateway).
+_CODE = re.compile(r"```.{0,8000}?```|`[^`\n]{0,400}`|https?://\S{1,2048}|"
+                   r"[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{1,63}|"
+                   r"[\w./\\-]{1,256}\.(?:py|js|ts|md|json|yaml|yml|txt|html|css)\b", re.S)
+
+MAX_CHARS = 4000          # plenty to identify a language; longer text is cut before any pattern runs
 
 
 def clean(text: str) -> str:
     """Prose only: code, links, paths and emails say nothing about the language."""
-    return _CODE.sub(" ", text or "")
+    return _CODE.sub(" ", (text or "")[:MAX_CHARS])
 
 
 def detect(text: str, min_letters: int = 12) -> Optional[str]:
