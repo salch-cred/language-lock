@@ -1,0 +1,30 @@
+name: language-lock
+version: 0.1.0
+manifest_version: 2
+api_version: 1
+description: >-
+  Your agent answers in your language, and stays there. Models drift: a long English conversation
+  turns into Chinese after a Chinese tool result (hermes-agent#130117), or a Spanish chat gets English
+  replies after some code turns. Language Lock learns your language from your recent messages (or one
+  you set), checks each reply's language without a model call (20 languages, by writing system and
+  common words), and when a reply drifted, tells the agent at the start of the next turn to switch
+  back. Asking for another language on purpose is respected. /lang shows drifts caught and fixed.
+author: salch-cred
+license: MIT
+homepage: https://github.com/salch-cred/language-lock
+tags: [i18n, language, multilingual, reliability, messaging, localization]
+requires_hermes: ">=0.23.0"
+
+provides_hooks:
+  - pre_llm_call
+  - post_llm_call
+
+config_schema:
+  language:
+    type: str
+    default: ""
+    description: Always expect this language (code or name, e.g. es or Spanish). Empty learns it from your messages.
+  remind:
+    type: str
+    default: drift
+    description: drift tells the agent only after a reply drifted; always reminds it every turn.
